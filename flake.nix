@@ -83,6 +83,13 @@
             name = "dev_random";
             partitions = [ "dev_random" ];
           }
+          {
+            name = "gnss_anomaly_detection";
+            partitions = [
+              "gnss_anomaly_detection_user"
+              "gnss_anomaly_detection_provider"
+            ];
+          }
         ];
 
         cargoPackageList = ps: builtins.map (p: "--package=${p}") ps;
@@ -128,6 +135,8 @@
             cargo-expand
             nixpkgs-fmt
             nodePackages.prettier
+            gpsd
+            tcpdump
           ];
           git.hooks = {
             enable = true;

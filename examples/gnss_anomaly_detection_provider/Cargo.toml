@@ -1,0 +1,15 @@
+[package]
+name = "gnss_anomaly_detection_provider"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+a653rs = { workspace = true, features = ["macros"] }
+a653rs-linux = { path = "../../partition" }
+a653rs-postcard = { git = "https://github.com/DLR-FT/a653rs-postcard.git", branch = "main" }
+log.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+gpsd = "0.1.2"
+cucumber = "0.20.1"

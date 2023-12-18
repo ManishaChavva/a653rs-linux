@@ -16,6 +16,9 @@ members = [
     "examples/ping_server",
 
     "examples/dev_random",
+
+    "examples/gnss_anomaly_detection_user",
+    "examples/gnss_anomaly_detection_provider",
 ]
 
 [workspace.dependencies]

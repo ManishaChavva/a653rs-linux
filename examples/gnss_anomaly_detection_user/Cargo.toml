@@ -1,0 +1,20 @@
+[package]
+name = "gnss_anomaly_detection_user"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+a653rs = { workspace = true, features = ["macros"] }
+a653rs-linux = { path = "../../partition" }
+a653rs-postcard = { git = "https://github.com/DLR-FT/a653rs-postcard.git", branch = "main" }
+serde = { version = "1.0", features = ["derive"] }
+log.workspace = true
+gpsd_proto = "0.7.0"
+chrono = { version = "0.4", features = ["serde"] }  
+cucumber = "0.20.1"
+[[test]]
+name = "gherkins"
+path = "features"
+harness = false  # allows Cucumber to print output instead of libtest

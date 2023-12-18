@@ -1,0 +1,29 @@
+major_frame: 1s
+partitions:
+  - id: 0
+    name: user
+    duration: 10ms
+    offset: 0ms
+    period: 1s
+    image: target/x86_64-unknown-linux-musl/release/gnss_anomaly_detection_user
+  - id: 1
+    name: provider
+    duration: 20ms
+    offset: 450ms
+    period: 1s
+    image: target/x86_64-unknown-linux-musl/release/gnss_anomaly_detection_provider
+    mounts:
+      - [examples/gnss_anomaly_detection_user/features, /features]
+channel:
+  - !Sampling
+    name: position
+    msg_size: 16B
+    source: provider
+    destination:
+      - user
+  - !Sampling
+    name: plausibility
+    msg_size: 32B
+    source: user
+    destination:
+      - provider
