@@ -12,4 +12,5 @@ a653rs-postcard = { git = "https://github.com/DLR-FT/a653rs-postcard.git", branc
 log.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 gpsd = "0.1.2"
+futures = "0.3"
 cucumber = "0.20.1"

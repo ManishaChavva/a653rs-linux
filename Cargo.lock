@@ -832,6 +832,7 @@ dependencies = [
  "a653rs-linux",
  "a653rs-postcard",
  "cucumber",
+ "futures",
  "gpsd",
  "log",
  "serde",

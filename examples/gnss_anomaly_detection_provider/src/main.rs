@@ -1,9 +1,8 @@
+use a653rs::bindings::Validity;
 use a653rs::partition;
 use a653rs::prelude::PartitionExt;
 use a653rs_linux::partition::ApexLogger;
 use log::LevelFilter;
-use a653rs::bindings::Validity;
-
 
 #[macro_use]
 extern crate log;
@@ -17,8 +16,8 @@ fn main() {
 
 #[partition(a653rs_linux::partition::ApexLinuxPartition)]
 mod gpsd {
-    use log::info;
     use a653rs_postcard::prelude::*;
+    use log::info;
 
     #[sampling_out(name = "position", msg_size = "16B")]
     struct PositionOut;
@@ -35,7 +34,10 @@ mod gpsd {
         ctx.create_plausibility_in().unwrap();
 
         // launch the periodic process
-        ctx.create_periodic_cucumber_test().unwrap().start().unwrap();
+        ctx.create_periodic_cucumber_test()
+            .unwrap()
+            .start()
+            .unwrap();
     }
 
     #[start(warm)]
@@ -55,39 +57,38 @@ mod gpsd {
     fn periodic_gpsd(ctx: periodic_gpsd::Context) {
         info!("started gpsd process");
 
-    // Defining structure for the position data
-    #[derive(serde::Deserialize, serde::Serialize)]
-    struct Position {
-    x: f32,
-    y: u128,
-    }
-        
-    // TODO receiveing the position data request and respond with the position data 
-
-    
-    let new_position = Position { x: 1.5, y: 42 };
-    ctx.position_out.unwrap().send_type(&new_position).unwrap();
-
-    // TODO validity check logic 
-
-    if let Ok((validity, received_request)) = ctx.plausibility_in.unwrap().recv_type::<bool>() {
-        if validity == Validity::Invalid {
-            warn!("Received an invalid request");
-            ctx.periodic_wait().unwrap();
-            return;
+        // Defining structure for the position data
+        #[derive(serde::Deserialize, serde::Serialize)]
+        struct Position {
+            x: f32,
+            y: u128,
         }
-    } else {
-        match ctx.position_out.unwrap().send_type(new_position) {
-            Err(err) => {
-                error!("Error receiving position request: {:?}", err);
+
+        // TODO receiveing the position data request and respond with the position data
+
+        let new_position = Position { x: 1.5, y: 42 };
+        ctx.position_out.unwrap().send_type(&new_position).unwrap();
+
+        // TODO validity check logic
+
+        if let Ok((validity, received_request)) = ctx.plausibility_in.unwrap().recv_type::<bool>() {
+            if validity == Validity::Invalid {
+                warn!("Received an invalid request");
                 ctx.periodic_wait().unwrap();
                 return;
             }
-            _ => {} 
+        } else {
+            match ctx.position_out.unwrap().send_type(new_position) {
+                Err(err) => {
+                    error!("Error receiving position request: {:?}", err);
+                    ctx.periodic_wait().unwrap();
+                    return;
+                }
+                _ => {}
+            }
         }
-    }
 
-    ctx.periodic_wait().unwrap();
+        ctx.periodic_wait().unwrap();
 
         /*loop {
             info!("forwarding request as response ");
@@ -117,43 +118,73 @@ mod gpsd {
         }*/
     }
 
-
-    #[periodic(
-        period = "0ms",
+    // Increased stack_size to 8MB so that we never run out of stack (otherwise
+    // there might be a segmentation fault)
+    #[aperiodic(
         time_capacity = "Infinite",
-        stack_size = "8KB",
+        stack_size = "8MB",
         base_priority = 1,
         deadline = "Soft"
     )]
     fn periodic_cucumber_test(ctx: periodic_cucumber_test::Context) {
         use cucumber::{given, then, when, World as _};
+        use std::sync::atomic::{AtomicPtr, Ordering};
 
-        #[derive(cucumber::World, Debug)]
+        // Use a static AtomicPtr to leak the ctx into the cucumber test
+        static CONTEXT: AtomicPtr<periodic_cucumber_test::Context> =
+            AtomicPtr::new(std::ptr::null_mut());
+        CONTEXT.store(&ctx as *const _ as *mut _, Ordering::Relaxed);
+
+        #[derive(cucumber::World)]
         struct World {
             user: Option<String>,
             capacity: usize,
+            ctx: &'static periodic_cucumber_test::Context<'static>,
         }
 
-        // TODO use once cell or something similar to leak the ctx into the world
-        #[given(expr = "a position is sent")] // Cucumber Expression
-        async fn a(w: &mut World, user: String) {
+        impl Default for World {
+            fn default() -> Self {
+                Self {
+                    user: None,
+                    capacity: 0,
+                    // get the original context from the AtomicPtr. This is not unsafe, because the
+                    // ctx lifes at least as long as this process
+                    ctx: unsafe {
+                        &*(CONTEXT.load(Ordering::Relaxed) as *const _)
+                            as &'static periodic_cucumber_test::Context<'static>
+                    },
+                }
+            }
+        }
+
+        impl core::fmt::Debug for World {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.debug_struct("World")
+                    .field("user", &self.user)
+                    .field("capacity", &self.capacity)
+                    .finish()
+            }
+        }
+
+        #[given(expr = "the GNSS receiver is actively receiving signals")] // Cucumber Expression
+        async fn a(w: &mut World) {
+            println!("{:?}", w.ctx.get_time());
             // ctx.position_out.unwrap().send_type(5u8).unwrap();
             // w.hypervisor_handle.periodic_wait();
         }
 
         #[then(expr = "plausibility shall be (true|false)")] // Cucumber Expression
         async fn b(w: &mut World, expexcted_plausibility: bool) {
-            // let ( validity, plausibility): (_, bool) = w.hypervisor_handle.plausibility_in.unwrap().recv_type().unwrap();
-            // assert_eq!(validity, Validity::Valid);
+            // let ( validity, plausibility): (_, bool) =
+            // w.hypervisor_handle.plausibility_in.unwrap().recv_type().
+            // unwrap(); assert_eq!(validity, Validity::Valid);
             // assert_eq!(plausibility, expexcted_plausibility);
             // w.hypervisor_handle.periodic_wait();
         }
-        
 
         info!("test 0");
         println!("test 1");
-        let runner = World::run("/features");
-        //futures::executor::block:on(World::run("/features"));
-    }
 
+        futures::executor::block_on(World::run("/features"));
+    }
 }
