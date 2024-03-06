@@ -93,7 +93,7 @@ mod anomaly_detection_user {
 
             // TODO write the result to the user_response port
 
-            ctx.plausibility_out.unwrap().send_type(&is_plausible_movement).unwrap(); // is this correct?
+            ctx.plausibility_out.unwrap().send_type(&is_plausible_movement).unwrap(); 
 
             ctx.periodic_wait().unwrap();
         }
