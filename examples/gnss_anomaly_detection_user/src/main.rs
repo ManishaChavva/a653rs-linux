@@ -17,14 +17,14 @@ mod anomaly_detection_user {
     use crate::detector::Position;
     use a653rs_postcard::prelude::*;
     //use core::time::Duration;
-    use chrono::{Utc, DateTime};
+    use chrono::{DateTime, Utc};
 
     use log::info;
     //use log::{info, warn};
 
     use super::detector;
 
-    #[sampling_in(name = "position", msg_size = "16B",refresh_period = "10s")]
+    #[sampling_in(name = "position", msg_size = "16B", refresh_period = "10s")]
     struct PositionIn;
 
     #[sampling_out(name = "plausibility", msg_size = "32B")]
@@ -70,16 +70,17 @@ mod anomaly_detection_user {
                 latitude: f64,
                 longitude: f64,
                 altitude: f32,
-                system_timestamp: SystemTime, 
-                gps_time: DateTime<Utc>,      
+                system_timestamp: SystemTime,
+                gps_time: DateTime<Utc>,
                 speed: f32,
             }
 
-            let (validity,position): (_, Position) = ctx.position_in.unwrap().recv_type().unwrap();
+            let (validity, position): (_, Position) = ctx.position_in.unwrap().recv_type().unwrap();
 
             // TODO read position struct from position_request
-            let Ok((validity, new_position)): Result<(_, Position), _> = ctx
-            .position_in.unwrap().recv_type() else {
+            let Ok((validity, new_position)): Result<(_, Position), _> =
+                ctx.position_in.unwrap().recv_type()
+            else {
                 log::warn!("there was an error on deserialization of Position:");
                 continue;
             };
@@ -98,11 +99,12 @@ mod anomaly_detection_user {
 
             // TODO write the result to the user_response port
 
-            ctx.plausibility_out.unwrap().send_type(&is_plausible_movement).unwrap(); 
+            ctx.plausibility_out
+                .unwrap()
+                .send_type(is_plausible_movement)
+                .unwrap();
 
             ctx.periodic_wait().unwrap();
         }
-
-        
     }
 }

@@ -36,11 +36,10 @@ impl Position {
         sys_time_diff.as_secs_f64()
     }
     pub fn gps_time_difference(&self, other: &Position) -> f64 {
-        let gps_time_diff = other
+        other
             .gps_time
             .signed_duration_since(self.gps_time)
-            .num_seconds() as f64;
-        gps_time_diff
+            .num_seconds() as f64
     }
 }
 // Spoofing detection algorithm
