@@ -17,11 +17,9 @@ mod anomaly_detection_user {
     use crate::detector::Position;
     use a653rs::bindings::Validity;
     use a653rs_postcard::prelude::*;
-    //use core::time::Duration;
     use chrono::{DateTime, Utc};
 
     use log::{info, warn};
-    //use log::{info, warn};
 
     use super::detector;
 
@@ -62,6 +60,9 @@ mod anomaly_detection_user {
     fn periodic_anomaly_detection_user(ctx: periodic_anomaly_detection_user::Context) {
         info!("started periodic_anomaly_detection_user process");
         let mut positions = Vec::new();
+
+        info!("initializinig the port with unplausibility as base assumption");
+        ctx.plausibility_out.unwrap().send_type(false).unwrap();
 
         loop {
             log::info!("entering loop body");

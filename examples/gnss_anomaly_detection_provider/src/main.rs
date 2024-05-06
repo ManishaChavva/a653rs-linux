@@ -24,8 +24,14 @@ mod gpsd {
         latitude: f64,
         longitude: f64,
         altitude: f32,
+
+        /// field to store system time
         system_timestamp: SystemTime,
+
+        /// field to store GPS time
         gps_time: NaiveDateTime,
+
+        /// speed in meters per second
         speed: f32,
     }
 
@@ -40,8 +46,10 @@ mod gpsd {
     fn cold_start(mut ctx: start::Context) {
         // intialize the request destination port
         ctx.create_position_out().unwrap();
+
         // intialize the response source port
         ctx.create_plausibility_in().unwrap();
+
         // launch the periodic process
         ctx.create_periodic_cucumber_test()
             .unwrap()
@@ -70,13 +78,6 @@ mod gpsd {
     }
 
     // Increased stack_size to 8MB so that we never run out of stack (otherwise
-    // there might be a segmentation fault)
-    // #[aperiodic(
-    //     time_capacity = "Infinite",
-    //     stack_size = "8MB",
-    //     base_priority = 1,
-    //     deadline = "Soft"
-    // )]
     #[periodic(
         period = "0ms",
         time_capacity = "Infinite",
