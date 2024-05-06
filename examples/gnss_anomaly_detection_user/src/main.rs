@@ -67,16 +67,6 @@ mod anomaly_detection_user {
         loop {
             log::info!("entering loop body");
 
-            #[derive(serde::Deserialize, serde::Serialize)]
-            struct MyDataStruct {
-                latitude: f64,
-                longitude: f64,
-                altitude: f32,
-                system_timestamp: SystemTime,
-                gps_time: DateTime<Utc>,
-                speed: f32,
-            }
-
             let new_position: Position = match ctx.position_in.unwrap().recv_type() {
                 Ok((Validity::Valid, position)) => position,
                 Ok((Validity::Invalid, _)) => {
