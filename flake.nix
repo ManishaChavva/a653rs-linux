@@ -40,6 +40,7 @@
             latest.rustfmt
             targets.${rust-target}.latest.rust-std
             targets.thumbv6m-none-eabi.latest.rust-std # for no_std test
+            rust-analyzer
           ];
 
         # overrides a naersk-lib which uses the stable toolchain expressed above
@@ -127,7 +128,6 @@
             stdenv.cc
             coreutils
             rust-toolchain
-            rust-analyzer
             cargo-outdated
             cargo-udeps
             cargo-watch
