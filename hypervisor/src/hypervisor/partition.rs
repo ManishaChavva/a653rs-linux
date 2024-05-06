@@ -237,9 +237,9 @@ impl Run {
                 // Run binary
                 let mut command = Command::new("/bin");
                 let mut command = command
-                    .stdout(Stdio::null())
+                    // .stdout(Stdio::null())
                     .stdin(Stdio::null())
-                    .stderr(Stdio::null())
+                    // .stderr(Stdio::null())
                     // Set Partition Name Env
                     .env(
                         PartitionConstants::PARTITION_CONSTANTS_FD,

@@ -2,17 +2,24 @@ use std::time::{Duration, SystemTime};
 //use std::thread::sleep;
 //use std::io;
 //use std::net::TcpStream;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 //use gpsd_proto::{Tpv, ResponseData};
 
-#[derive(serde::Deserialize, serde::Serialize)]
+// Defining structure for the position data
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Position {
     latitude: f64,
     longitude: f64,
     altitude: f32,
-    system_timestamp: SystemTime, // field to store system time
-    gps_time: DateTime<Utc>,      // field to store GPS time
-    speed: f32,                   // speed in meters per second
+
+    /// field to store system time
+    system_timestamp: SystemTime,
+
+    /// field to store GPS time
+    gps_time: NaiveDateTime,
+
+    /// speed in meters per second
+    speed: f32,
 }
 
 impl Position {

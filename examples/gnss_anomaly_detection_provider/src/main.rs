@@ -16,7 +16,7 @@ fn main() {
 mod gpsd {
     use a653rs_postcard::prelude::*;
     use chrono::NaiveDateTime;
-    use log::info;
+    use log::{debug, info, trace};
 
     // Defining structure for the position data
     #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -30,10 +30,10 @@ mod gpsd {
     }
 
     //use super::SharedWorld;
-    #[sampling_out(name = "position", msg_size = "16B")]
+    #[sampling_out(name = "position", msg_size = "1KB")]
     struct PositionOut;
 
-    #[sampling_in(name = "plausibility", msg_size = "32B", refresh_period = "10s")]
+    #[sampling_in(name = "plausibility", msg_size = "1KB", refresh_period = "10s")]
     struct PlausibilityIn;
 
     #[start(cold)]
@@ -57,10 +57,14 @@ mod gpsd {
     /// Send a position out, wait for one partition period, and receive the
     /// result
     fn send_and_receive(ctx: &periodic_cucumber_test::Context, position: &Position) -> bool {
+        debug!("sending out position, waiting for plausibility response");
+        trace!("{position:?}");
         ctx.position_out.unwrap().send_type(position).unwrap();
         ctx.periodic_wait().unwrap();
+
         let (validity, plausibility) = ctx.plausibility_in.unwrap().recv_type::<bool>().unwrap();
         assert_eq!(validity, Validity::Valid);
+        debug!("done waiting for plausibility response");
 
         plausibility
     }
@@ -76,7 +80,7 @@ mod gpsd {
     #[periodic(
         period = "0ms",
         time_capacity = "Infinite",
-        stack_size = "8KB",
+        stack_size = "8MB",
         base_priority = 1,
         deadline = "Soft"
     )]
@@ -99,6 +103,7 @@ mod gpsd {
 
         impl Default for World {
             fn default() -> Self {
+                debug!("initializing new cucumber world");
                 Self {
                     window_positions: Vec::new(),
                     // get the original context from the AtomicPtr. This is not unsafe, because the
@@ -119,6 +124,7 @@ mod gpsd {
                     .finish()
             }
         }
+
         // Step definitions
 
         // Scenario: No plausibility assumed after legitimate movement
@@ -228,7 +234,8 @@ mod gpsd {
             }
         }
 
-        info!("test 0");
+        info!("starting cucumber test harness");
         futures::executor::block_on(World::run("/features"));
+        info!("done with cucumber test harness");
     }
 }
