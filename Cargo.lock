@@ -831,6 +831,7 @@ dependencies = [
  "a653rs",
  "a653rs-linux",
  "a653rs-postcard",
+ "chrono",
  "cucumber",
  "futures",
  "gpsd",

@@ -14,3 +14,4 @@ serde = { version = "1.0", features = ["derive"] }
 gpsd = "0.1.2"
 futures = "0.3"
 cucumber = "0.20.1"
+chrono = { version = "0.4", features = ["serde"] } 
